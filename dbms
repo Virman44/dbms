@@ -1,0 +1,313 @@
+#define _CRT_SECURE_NO_WARNINGS //для работы scanf
+#include <stdio.h> //присоединяем все нужные библиотеки
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <Windows.h>
+#include <locale.h>
+#include <time.h>
+
+#define N 50 //N - максимальная длина ФИО автора или названия книги
+#define H 101 //H - высота массива данных (сколько строк содержится в таблице), подсчет начинается не с 0-й, а с 1-й ячейки массива для удобства
+
+struct book { //описываем структуру книги
+	long long isbn; //ISBN
+ 	char author[N]; //Автор книги
+	char bookname[N]; //Название книги
+	int allbooks; //Сколько книг у библиотеки
+	int usebooks; //Сколько книг на руках у студентов
+};
+
+
+
+
+int main(void){
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251); //руссификатор для записи данных в файл
+	setlocale(LC_ALL, "Rus"); //руссификатор для консоли
+	char arr[N]; //Вспомогательный массив для записи строковых переменных
+	int menu1 = 0; //Переменная для работы меню библиотеки
+	long long isbncheckdelete = 0; //Переменная отвечающая за совпадение isbn при удалении
+	int isbncheck = 1; //Вспомогательная переменная для проверки на совпадение isbn (добавление)
+	int isbncheck2 = 0; //Вспомогательная переменная для проверки на совпадение isbn (удаление)
+	int isbndelete = 0; //Переменная, хранящая информацию, какую строку удалили
+	long long ttime; //Переменная, хранящая в себе время системы
+	char save[255]; //Переменная для создания бэкапа
+	char a[255]; //Вспомогательный массив для записи переменной save
+	char searchauthor[N]; //Переменная для поиска автора
+	char csv[] = ".csv"; //Массив, содержащий расширение csv 
+	int j1; //Служебная переменная
+	int j2; //Служебная переменная
+	int j3; //Служебная переменная
+	char supportopen[] = "books.csv"; //Массив, содержащий название начальной базы данных
+	char openfile[255]; //Массив, указывающий на файл, с которым нужно работать
+
+
+
+
+
+
+	struct book library[H]; //структура библиотека на H мест
+
+
+
+
+	
+	while (menu1 == 0) {
+    system("cls");
+	strncpy(openfile, supportopen, 10); //указываем, какой файл надо открыть(books.csv по стандарту)
+	FILE *books;
+	
+	books = fopen(openfile, "r");
+	
+	printf("База данных:\n");
+	Sleep(300);
+	printf("      ISBN                ФИО автора                  Название книги         Всего Используют\n");
+
+	int i = 1;
+	int j = 0;
+	fscanf(books, "%lld;", &library[i].isbn);
+	while (library[i].isbn > 0) {
+		printf("%16lld", library[i].isbn);
+		while ((arr[j] = fgetc(books)) != '\n') {
+			if (arr[j] == ';') {
+				arr[j] = '\0';
+				printf("%30s", arr);
+				strncpy(library[i].author, arr, N);
+				j = 0;
+				break;
+			}
+			else j++;
+		}
+		while ((arr[j] = fgetc(books)) != '\n') {
+			if (arr[j] == ';') {
+				arr[j] = '\0';
+				printf("%30s ", arr);
+				strncpy(library[i].bookname, arr, N);
+				j = 0;
+				break;
+			}
+			else j++;
+		}
+	
+		fscanf(books, "%d;%d", &library[i].allbooks, &library[i].usebooks);
+		printf("%5d ", library[i].allbooks);
+		printf("%5d\n", library[i].usebooks);
+		i++; 
+		Sleep(60);
+		fscanf(books, "%lld;", &library[i].isbn);
+	}
+	fclose(books);
+	printf("\n");
+	printf("Выберить действие:\n");
+	printf("1) Добавить новую книгу\n");
+	printf("2) Удалить книгу по ISBN\n");
+	printf("3) Сделать бэкап\n");
+	printf("4) Восстановить базу данных из бэкапа\n");
+	printf("5) Поиск автора\n");
+	printf("6) Сохранить и выйти\n");
+	printf("\n");
+	printf("--->");
+		scanf("%d", &menu1);
+		printf("\n");
+		if ((menu1 != 1) and (menu1 != 2) and (menu1 != 3) and (menu1 != 4) and (menu1 != 5) and (menu1 != 6)) {
+			printf("Ошибка! Введите другое значение.");
+			menu1 = 0;
+			Sleep(2000);
+			continue;
+		}
+		switch (menu1) {
+		case 1:
+			books = fopen(openfile, "w");
+			while (isbncheck == 1) { //проверка на наличие ISBN
+				printf("Введите ISBN:");
+				isbncheck = 0;
+				scanf("%lld", &library[i].isbn);
+				if (library[i].isbn == 0) {
+					printf("Некорректный ISBN.\n");
+					Sleep(2000);
+					isbncheck = 1;
+					continue;
+				}
+				for (j1 = 1; j1 < i; j1++) {
+					if (library[i].isbn == library[j1].isbn) {
+						isbncheck = 1;
+					}
+				}
+				if (isbncheck == 1) {
+					printf("Книга с таким ISBN уже существует.\n");
+					Sleep(2000);
+					
+				}
+			}
+			isbncheck = 1;
+			arr[j] = getchar();
+			printf("Введите автора книги: ");
+			arr[j] = getchar();
+			while (arr[j] != '\n') {
+				j++;
+				arr[j] = getchar();
+			}
+			arr[j] = '\0';
+			strncpy(library[i].author, arr, N);
+			j = 0;
+			printf("Введите название книги: ");
+			arr[j] = getchar();
+			while (arr[j] != '\n') {
+				j++;
+				arr[j] = getchar();
+			}
+			arr[j] = '\0';
+			strncpy(library[i].bookname, arr, N);
+			j = 0;
+			printf("Введите сколько книг всего у библиотеки: ");
+			scanf("%d", &library[i].allbooks);
+			printf("Введите сколько книг на руках у студентов: ");
+			scanf("%d", &library[i].usebooks);
+			for (int i1 = 1; i1 <= i;i1++) {
+					fprintf(books, "%lld;%s;%s;%d;%d\n", library[i1].isbn, library[i1].author, library[i1].bookname, library[i1].allbooks, library[i1].usebooks);
+			}
+			fclose(books);
+			menu1 = 0;
+			system("cls");
+			printf("Книга успешно добавлена!");
+			Sleep(2000);
+			break;
+		case 2:
+			books = fopen(openfile, "w");
+			while (isbncheck2 == 0) { //проверка на ISBN
+				printf("Введите ISBN книги, которую хотите удалить: ");
+				scanf("%lld", &isbncheckdelete);
+				if (isbncheckdelete == 0) {
+					printf("Книга с таким ISBN не найдена.\n");
+					Sleep(2000);
+					continue;
+				}
+				for (j1 = 1; j1 < i; j1++) {
+					if (isbncheckdelete == library[j1].isbn) {
+						isbncheck2 = 1;
+						isbndelete = j1;
+					}
+				}
+				if (isbncheck2 == 0) {
+					printf("Книга с таким ISBN не найдена.\n");
+					Sleep(2000);
+                }
+			}
+			isbncheck2 = 0;
+			i--;
+			for (int i1 = 1; i1 < isbndelete; i1++) {
+					fprintf(books, "%lld;%s;%s;%d;%d\n", library[i1].isbn, library[i1].author, library[i1].bookname, library[i1].allbooks, library[i1].usebooks);
+				
+			}
+			for (isbndelete; isbndelete < i; isbndelete++) {
+					library[isbndelete].isbn = library[isbndelete + 1].isbn;
+					strncpy(library[isbndelete].author, library[isbndelete + 1].author, N);
+					strncpy(library[isbndelete].bookname, library[isbndelete + 1].bookname, N);
+					library[isbndelete].allbooks = library[isbndelete + 1].allbooks;
+					library[isbndelete].usebooks = library[isbndelete + 1].usebooks;
+					fprintf(books, "%lld;%s;%s;%d;%d\n", library[isbndelete].isbn, library[isbndelete].author, library[isbndelete].bookname, library[isbndelete].allbooks, library[isbndelete].usebooks);
+				}
+			fclose(books);
+			library[i].isbn = NULL;
+			menu1 = 0;
+			system("cls");
+			printf("Книга успешно удалена!");
+			Sleep(2000);
+			break;
+		case 3:
+			ttime = time(NULL);
+			ctime(&ttime);
+			strncpy(save, ctime(&ttime), 255);
+			j2 = strlen(save);
+			j2--;
+			save[j2] = '\0';
+			for (int j3 = 0; j3 < j2; j3++) {
+				if (save[j3] == ':') {
+					save[j3] = '_';
+				}
+			}
+			snprintf(save, sizeof save, "%s%s", save, csv);
+			books = fopen(save , "w");
+			for (int i1 = 1; i1 < i; i1++) {
+				fprintf(books, "%lld;%s;%s;%d;%d\n", library[i1].isbn, library[i1].author, library[i1].bookname, library[i1].allbooks, library[i1].usebooks);
+			}
+			fclose(books);
+			printf("Бэкап создан! Название: %s", save);
+			Sleep(7500);
+			menu1 = 0;
+			system("cls");
+			break;
+		case 4:
+			printf("Введите имя бэкапа: ");
+			a[j] = getchar();
+			j = 0;
+			a[j] = getchar();
+			while (a[j] != '\n') {
+				j++;
+				a[j] = getchar();
+			}
+			a[j] = '\0';
+			strncpy(openfile, a, 255);
+			printf("Файл загружен: %s", openfile);
+			Sleep(3000);
+			for (int i1 = 1; i1 <= i; i1++) {
+				library[i1].isbn = NULL;
+			}
+			menu1 = 0;
+			j = 0;
+			system("cls");
+			break;
+		case 5:
+			printf("Введите автора, которого хотите найти: ");
+			j = 0;
+			arr[j] = getchar();
+			arr[j] = getchar();
+			while (arr[j] != '\n') {
+				j++;
+				arr[j] = getchar();
+			}
+			arr[j] = '\0';
+			j = 0;
+			strncpy(searchauthor, arr, 30);
+			system("cls");
+			printf("Книги автора %s\n", searchauthor);
+			printf("      ISBN                ФИО автора                  Название книги         Всего Используют\n");
+			for (int i1 = 1; i1 < i;i1++) {
+				if (strcmp(searchauthor, library[i1].author) == 0) {
+					printf("%16lld%30s%30s%5d%5d\n", library[i1].isbn, library[i1].author, library[i1].bookname, library[i1].allbooks, library[i1].usebooks);
+					j++;
+				}
+			}
+			if (j == 0) {
+				system("cls");
+				printf("Книги автора %s не найдены\n", searchauthor);
+			}
+			j = 0;
+			printf("0) Вернуться в меню\n");
+			printf("\n");
+			printf("--->");
+			scanf("%d", &menu1);
+			while (menu1 != 0) {
+				printf("Ошибка! Введите 0\n");
+				Sleep(1500);
+				printf("\n");
+				printf("--->");
+				scanf("%d", &menu1);
+			}
+			break;
+		case 6:
+			books = fopen(openfile, "w");
+			for (int i1 = 1; i1 < i; i1++) {
+				fprintf(books, "%lld;%s;%s;%d;%d\n", library[i1].isbn, library[i1].author, library[i1].bookname, library[i1].allbooks, library[i1].usebooks);
+			}
+			fclose(books);
+			printf("Завершение работы");
+			Sleep(1500);
+			strncpy(openfile, supportopen, 10);
+			exit;
+			break;
+
+        }
+	}
+}
