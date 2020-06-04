@@ -50,12 +50,11 @@ int main(void){
 	struct book library[H]; //структура библиотека на H мест
 
 
-
+        strncpy(openfile, supportopen, 10); //указываем, какой файл надо открыть(books.csv по стандарту)
 
 	
 	while (menu1 == 0) {
     system("cls");
-	strncpy(openfile, supportopen, 10); //указываем, какой файл надо открыть(books.csv по стандарту)
 	FILE *books;
 	
 	books = fopen(openfile, "r");
